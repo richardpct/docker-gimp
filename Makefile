@@ -6,6 +6,11 @@ CONTAINER     := gimp
 IMAGE         := richardpct/$(CONTAINER)
 VOL_DOWNLOADS ?= $(HOME)/container/$(CONTAINER)
 INTERFACE     ?= en4
+DOCKER_EXISTS := $(shell which docker)
+
+ifndef DOCKER_EXISTS
+  $(error docker is not found)
+endif
 
 build: Dockerfile
 ifneq "$(shell docker image inspect $(IMAGE) > /dev/null 2>&1 && echo exists)" "exists"
