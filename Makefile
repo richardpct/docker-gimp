@@ -2,6 +2,7 @@
 
 .DEFAULT_GOAL := run
 VPATH         := dockerfile
+BUILD         := .build
 CONTAINER     := gimp
 IMAGE         := richardpct/$(CONTAINER)
 VOL_DOWNLOADS ?= $(HOME)/container/$(CONTAINER)
@@ -12,37 +13,52 @@ ifndef DOCKER_EXISTS
   $(error docker is not found)
 endif
 
-build: Dockerfile
-ifneq "$(shell docker image inspect $(IMAGE) > /dev/null 2>&1 && echo exists)" "exists"
+# $(call docker-image-rm)
+define docker-image-rm
+  if docker image inspect $(IMAGE) > /dev/null 2>&1 ; then \
+    docker image rm $(IMAGE); \
+    rm -f $(BUILD); \
+  fi
+endef
+
+# $(call docker-container-stop)
+define docker-container-stop
+  if docker container inspect $(CONTAINER) > /dev/null 2>&1 ; then \
+    docker container stop $(CONTAINER); \
+  fi
+endef
+
+build: $(BUILD)
+
+.build: Dockerfile
+	$(call docker-container-stop)
+	$(call docker-image-rm)
+
 	cd dockerfile && \
 	docker build -t $(IMAGE) .
-endif
+	@touch $@
 
 run: IP := $(shell ifconfig $(INTERFACE) | awk '/inet /{print $$2}')
-run: build
+run: $(BUILD)
 ifeq "$(wildcard $(VOL_DOWNLOADS))" ""
 	@mkdir -p $(VOL_DOWNLOADS)
 endif
 
-ifneq "$(shell docker container inspect $(CONTAINER) > /dev/null 2>&1 && echo exists)" "exists"
-	xhost + $(IP) && \
-	docker container run --rm -d \
-	-e DISPLAY=$(IP):0 \
-	-v /tmp/.X11-unix:/tmp/.X11-unix \
-	-v $(VOL_DOWNLOADS):/root/Downloads \
-	--name $(CONTAINER) \
-	$(IMAGE)
-endif
+	if ! docker container inspect $(CONTAINER) > /dev/null 2>&1 ; then \
+	  xhost + $(IP); \
+	  docker container run --rm -d \
+	  -e DISPLAY=$(IP):0 \
+	  -v /tmp/.X11-unix:/tmp/.X11-unix \
+	  -v $(VOL_DOWNLOADS):/root/Downloads \
+	  --name $(CONTAINER) \
+	  $(IMAGE); \
+	fi
 
 exec: run
 	docker container exec -it $(CONTAINER) /bin/bash
 
 stop:
-ifeq "$(shell docker container inspect $(CONTAINER) > /dev/null 2>&1 && echo exists)" "exists"
-	docker container stop $(CONTAINER)
-endif
+	$(call docker-container-stop)
 
 rm: stop
-ifeq "$(shell docker image inspect $(IMAGE) > /dev/null 2>&1 && echo exists)" "exists"
-	docker image rm $(IMAGE)
-endif
+	$(call docker-image-rm)
