@@ -1,11 +1,9 @@
-.PHONY: build run exec stop rm
-
 .DEFAULT_GOAL := run
 VPATH         := dockerfile
 BUILD         := .build
 CONTAINER     := gimp
 IMAGE         := richardpct/$(CONTAINER)
-VOL_DOWNLOADS ?= $(HOME)/container/$(CONTAINER)
+VOL_SHARE     ?= $(HOME)/container/$(CONTAINER)
 INTERFACE     ?= en4
 DOCKER_EXISTS := $(shell which docker)
 
@@ -28,6 +26,7 @@ define docker-container-stop
   fi
 endef
 
+.PHONY: build
 build: $(BUILD)
 
 .build: Dockerfile
@@ -38,10 +37,11 @@ build: $(BUILD)
 	docker build -t $(IMAGE) .
 	@touch $@
 
+.PHONY: run
 run: IP := $(shell ifconfig $(INTERFACE) | awk '/inet /{print $$2}')
 run: $(BUILD)
-ifeq "$(wildcard $(VOL_DOWNLOADS))" ""
-	@mkdir -p $(VOL_DOWNLOADS)
+ifeq "$(wildcard $(VOL_SHARE))" ""
+	@mkdir -p $(VOL_SHARE)
 endif
 
 	if ! docker container inspect $(CONTAINER) > /dev/null 2>&1 ; then \
@@ -49,16 +49,19 @@ endif
 	  docker container run --rm -d \
 	  -e DISPLAY=$(IP):0 \
 	  -v /tmp/.X11-unix:/tmp/.X11-unix \
-	  -v $(VOL_DOWNLOADS):/root/Downloads \
+	  -v $(VOL_SHARE):/root/Share \
 	  --name $(CONTAINER) \
 	  $(IMAGE); \
 	fi
 
+.PHONY: exec
 exec: run
 	docker container exec -it $(CONTAINER) /bin/bash
 
+.PHONY: stop
 stop:
 	$(call docker-container-stop)
 
+.PHONY: rm
 rm: stop
 	$(call docker-image-rm)
