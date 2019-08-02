@@ -7,8 +7,11 @@ Run Gimp in a container
 * XQuartz
 
 # Usage
-I wrote a Makefile for handling the life cycles of images and containers, the
+I wrote a Makefile for handling the life cycle of images and containers, the
 syntax is as follows:
+
+## Getting help
+    $ make help
 
 ## Building the image
     $ make build
@@ -22,10 +25,10 @@ change the directory by overriding the *VOL_SHARE* variable, for instance:
     $ make VOL_SHARE=~/gimp run
 
 ## Getting a shell access to the running container
-    $ make exec
+    $ make shell
 
 ## Stopping the container
     $ make stop
 
 ## Removing the image
-    $ make rm
+    $ make clean
