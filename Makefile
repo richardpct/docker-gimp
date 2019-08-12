@@ -1,13 +1,13 @@
 .DEFAULT_GOAL := help
 AWK           := awk
-DOCKER        := docker
+DOCKER        := /usr/local/docker
 VPATH         := dockerfile
 BUILD         := .build
 CONTAINER     := gimp
 IMAGE         := richardpct/$(CONTAINER)
 VOL_SHARE     ?= $(HOME)/container/$(CONTAINER)
 
-# If the DOCKER variable does not exist then looks for in the PATH variable
+# If DOCKER does not exist then looks for in the PATH variable
 ifeq "$(wildcard $(DOCKER))" ""
   DOCKER_FOUND := $(shell which docker)
   DOCKER = $(if $(DOCKER_FOUND),$(DOCKER_FOUND),$(error docker is not found))
