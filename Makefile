@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 AWK           := awk
-DOCKER        := /usr/local/docker
+DOCKER        = /usr/local/bin/docker
 VPATH         := dockerfile
 BUILD         := .build
 CONTAINER     := gimp
@@ -11,6 +11,13 @@ VOL_SHARE     ?= $(HOME)/container/$(CONTAINER)
 ifeq "$(wildcard $(DOCKER))" ""
   DOCKER_FOUND := $(shell which docker)
   DOCKER = $(if $(DOCKER_FOUND),$(DOCKER_FOUND),$(error docker is not found))
+endif
+
+# Check if Docker is running
+ifneq "$(MAKECMDGOALS)" "$(filter $(MAKECMDGOALS), help)"
+  ifneq "$(shell $(DOCKER) version > /dev/null && echo running)" "running"
+    $(error Docker is not running)
+  endif
 endif
 
 # Retrieve your private IP whether the target is run or shell
@@ -40,7 +47,7 @@ endef
 help: ## Show help
 	@echo "Usage: make [VOL_SHARE=/tmp] TARGET\n"
 	@echo "Targets:"
-	@$(AWK) -F ":.* ##" '/.*:.*##/{printf "%-13s%s\n", $$1, $$2}' \
+	@$(AWK) -F ":.* ##" '/^[^#].*:.*##/{printf "%-13s%s\n", $$1, $$2}' \
 	$(MAKEFILE_LIST) \
 	| grep -v AWK
 

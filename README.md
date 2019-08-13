@@ -7,7 +7,7 @@ Run Gimp in a container
 * XQuartz
 
 # Usage
-I wrote a Makefile for handling the life cycle of images and containers, the
+I wrote a Makefile to handle the life cycle of images and containers, the
 syntax is as follows:
 
 ## Getting help
@@ -20,7 +20,7 @@ syntax is as follows:
     $ make run
 
 By default the saved files are stored in ~/container/gimp on your host, you can
-change the directory by overriding the *VOL_SHARE* variable, for instance:
+change the directory by overriding the *VOL_SHARE* variable, for example:
 
     $ make VOL_SHARE=~/gimp run
 
