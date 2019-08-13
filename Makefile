@@ -51,20 +51,6 @@ help: ## Show help
 	$(MAKEFILE_LIST) \
 	| grep -v AWK
 
-$(VOL_SHARE):
-	@mkdir -p $@
-
-.PHONY: build
-build: $(BUILD) ## Build the image from the Dockerfile
-
-$(BUILD): Dockerfile
-	$(call docker-container-stop)
-	$(call docker-image-rm)
-
-	cd dockerfile && \
-	$(DOCKER) build -t $(IMAGE) .
-	@touch $@
-
 .PHONY: shell
 shell: run ## Get a shell into the container
 	$(DOCKER) container exec -it $(CONTAINER) /bin/bash
@@ -80,6 +66,20 @@ run: $(VOL_SHARE) $(BUILD) ## Run the container
 	  --name $(CONTAINER) \
 	  $(IMAGE); \
 	fi
+
+$(VOL_SHARE):
+	@mkdir -p $@
+
+.PHONY: build
+build: $(BUILD) ## Build the image from the Dockerfile
+
+$(BUILD): Dockerfile
+	$(call docker-container-stop)
+	$(call docker-image-rm)
+
+	cd dockerfile && \
+	$(DOCKER) build -t $(IMAGE) .
+	@touch $@
 
 .PHONY: clean
 clean: stop ## Delete the image
